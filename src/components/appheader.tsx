@@ -17,7 +17,7 @@ function AppHeader() {
         <PrimaryButton
           text="Get Started"
           onClick={() => {
-            console.log("Get Started clicked");
+            window.location.href = "http://localhost:8080/auth/google";
           }}
         />
       </div>
