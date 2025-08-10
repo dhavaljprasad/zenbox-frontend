@@ -17,19 +17,26 @@ export const PrimaryButton = ({
   );
 };
 
-export const SecondaryButton = ({
-  text,
+export const SidebarButton = ({
+  primaryText,
+  secondaryText = "",
   onClick,
+  selected = false,
 }: {
-  text: string;
+  primaryText: string;
+  secondaryText?: string;
   onClick: () => void;
+  selected?: boolean;
 }) => {
   return (
     <button
       onClick={onClick}
-      className="flex items-center justify-center px-2 py-2 bg-neutral-900 rounded-lg cursor-pointer hover:bg-neutral-700 transition duration-200"
+      className={`flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer transition duration-200 ${
+        selected ? "bg-neutral-700" : "bg-neutral-900 hover:bg-neutral-700"
+      }`}
     >
-      <span className="text-sm font-semibold text-white">{text}</span>
+      <span className="text-sm font-semibold text-white">{primaryText}</span>
+      <span className="text-xs text-gray-400">{secondaryText}</span>
     </button>
   );
 };

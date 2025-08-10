@@ -1,9 +1,11 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { getCookie } from "cookies-next";
 import { jwtDecode } from "jwt-decode";
 import CommonHeader from "@/components/commonheader";
 import Sidebar from "@/components/sidebar";
+
+import { SideBarConfig } from "@/utils/configs";
 
 interface ZenboxJwtPayload {
   id: string;
@@ -19,6 +21,9 @@ interface ZenboxJwtPayload {
 function MailPage() {
   const [userData, setUserData] = useState<ZenboxJwtPayload | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<string>(
+    SideBarConfig[0].contents[0].title
+  );
 
   useEffect(() => {
     const jwtToken = getCookie("jwtToken");
@@ -36,17 +41,15 @@ function MailPage() {
     }
   }, []);
 
-  // Use a separate useEffect to log the updated state
-  useEffect(() => {
-    console.log("Access Token:", accessToken);
-    console.log("Decoded User Data:", userData);
-  }, [accessToken, userData]);
-
   return (
     <div className="w-full h-full bg-neutral-900">
       <CommonHeader userData={userData} />
       <div className="h-full w-full flex items-center">
-        <Sidebar />
+        <Sidebar
+          SideBarConfig={SideBarConfig}
+          selectedTab={selectedTab}
+          setSelectedTab={setSelectedTab}
+        />
       </div>
     </div>
   );
