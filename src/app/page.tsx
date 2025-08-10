@@ -1,8 +1,11 @@
 "use client";
 
+import AppHeader from "@/components/appheader";
+
 export default function Home() {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-neutral-900 p-16 gap-8">
+    <div className="w-full h-full flex  justify-center bg-neutral-900 gap-8">
+      <AppHeader />
       <HeroComponent />
     </div>
   );
@@ -10,7 +13,7 @@ export default function Home() {
 
 export const HeroComponent = () => {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-4 pt-16 p-8">
+    <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-32 p-8">
       <h1 className="text-white text-6xl font-semibold">Welcome to Zenbox</h1>
       <span className="text-white text-xl">
         Your personal AI native email client that manages your emails and saves
