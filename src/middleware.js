@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const protectedRoutes = ["/zenbox"];
+const protectedRoutes = ["/mail"];
 
 export default async function middleware(request) {
   const { pathname } = request.nextUrl;
@@ -29,5 +29,5 @@ export default async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/", "/zenbox"],
+  matcher: ["/", "/mail"],
 };
