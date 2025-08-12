@@ -2,5 +2,34 @@
 
 * {
   font-family: "Montserrat", sans-serif;
-  /* color: #fff; */
+}
+
+/* For all scrollbars in the application */
+::-webkit-scrollbar {
+  width: 8px; /* Width of the vertical scrollbar */
+  height: 8px; /* Height of the horizontal scrollbar */
+}
+
+/* Track behind the scrollbar */
+::-webkit-scrollbar-track {
+  background: #2d2d2d; /* Dark background for the track */
+  border-radius: 10px; /* Rounded corners for a softer look */
+}
+
+/* Handle or "thumb" of the scrollbar */
+::-webkit-scrollbar-thumb {
+  background-color: #555; /* Medium dark grey for the scrollbar handle */
+  border-radius: 10px; /* Rounded corners for the handle */
+  border: 2px solid #2d2d2d; /* A bit of padding around the handle */
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #777; /* Lighter grey on hover for a subtle interactive effect */
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: #555 #2d2d2d; /* thumb color and track color */
 }

@@ -39,6 +39,8 @@ function MailPage() {
     page: 0,
     pageid: "",
   });
+  const [activeMailListData, setactiveMailListData] = useState();
+  const [activeMail, setActiveMail] = useState();
 
   useEffect(() => {
     const jwtToken = getJWTToken();
@@ -58,8 +60,6 @@ function MailPage() {
       const jwtToken = getJWTToken();
       const accessToken = await getAccessToken();
 
-      console.log("accessToken:", accessToken);
-
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/allmail`,
         {
@@ -73,7 +73,7 @@ function MailPage() {
         }
       );
 
-      const mailboxData = response.data;
+      let mailboxData = response.data;
       const updatedConfig = [...sideBarConfig]; // Create a shallow copy of the state
 
       // Update the contents of the 'Flow' section
@@ -92,10 +92,11 @@ function MailPage() {
         }
       });
 
-      console.log(updatedConfig, "updated config");
-
       // Set the new state to trigger a re-render
       setSideBarConfig(updatedConfig);
+
+      mailboxData.inbox.title = selectedTab;
+      setactiveMailListData(mailboxData.inbox);
     } catch (error) {
       console.warn(`Following Error Occurred: ${error}`);
     }
@@ -107,6 +108,29 @@ function MailPage() {
     }
   }, [userData]);
 
+  const switchSideBarTab = (tabName: string) => {
+    setSelectedTab(tabName);
+
+    let activeMailData = null;
+
+    for (const section of sideBarConfig) {
+      const foundItem = section.contents.find(
+        (item) => item.title.toLowerCase() === tabName.toLowerCase()
+      );
+
+      if (foundItem) {
+        // Once found, extract the data and break the loop
+        activeMailData = foundItem.data;
+        break;
+      }
+    }
+
+    if (!activeMailData) {
+      // Set the active mail data
+      setactiveMailListData(activeMailData);
+    }
+  };
+
   return (
     <div className="w-full h-full bg-neutral-900">
       <CommonHeader userData={userData} />
@@ -114,10 +138,10 @@ function MailPage() {
         <Sidebar
           SideBarConfig={sideBarConfig}
           selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
+          setSelectedTab={switchSideBarTab}
         />
-        <div className="h-screen w-full pt-18 p-2">
-          <MailList />
+        <div className="h-screen w-full flex gap-2 pt-18 p-2">
+          <MailList mailList={activeMailListData} />
           <ReadMail />
         </div>
       </div>
