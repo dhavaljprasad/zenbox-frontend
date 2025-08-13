@@ -35,6 +35,7 @@ function MailPage() {
   const [selectedTab, setSelectedTab] = useState<string>(
     sideBarConfig[0].contents[0].title
   );
+  const [globalMailBoxData, setGlobalMailboxData] = useState();
   const [selectedPage, setSelectedPage] = useState<SelectedPage>({
     page: 0,
     pageid: "",
@@ -74,6 +75,7 @@ function MailPage() {
       );
 
       let mailboxData = response.data;
+      setGlobalMailboxData(response.data);
       const updatedConfig = [...sideBarConfig]; // Create a shallow copy of the state
 
       // Update the contents of the 'Flow' section
@@ -81,6 +83,9 @@ function MailPage() {
         const mailboxType = item.title.toLowerCase();
         if (mailboxData[mailboxType]) {
           item.data = mailboxData[mailboxType];
+          if (item.data) {
+            (item.data as any).title = mailboxType;
+          }
         }
       });
 
@@ -89,13 +94,15 @@ function MailPage() {
         const mailboxType = item.title.toLowerCase();
         if (mailboxData[mailboxType]) {
           item.data = mailboxData[mailboxType];
+          if (item.data) {
+            (item.data as any).title = mailboxType;
+          }
         }
       });
 
-      // Set the new state to trigger a re-render
-      setSideBarConfig(updatedConfig);
+      console.log(globalMailBoxData, updatedConfig);
 
-      mailboxData.inbox.title = selectedTab;
+      setSideBarConfig(updatedConfig);
       setactiveMailListData(mailboxData.inbox);
     } catch (error) {
       console.warn(`Following Error Occurred: ${error}`);
@@ -110,26 +117,14 @@ function MailPage() {
 
   const switchSideBarTab = (tabName: string) => {
     setSelectedTab(tabName);
-
-    let activeMailData = null;
-
-    for (const section of sideBarConfig) {
-      const foundItem = section.contents.find(
-        (item) => item.title.toLowerCase() === tabName.toLowerCase()
-      );
-
-      if (foundItem) {
-        // Once found, extract the data and break the loop
-        activeMailData = foundItem.data;
-        break;
-      }
-    }
-
-    if (!activeMailData) {
-      // Set the active mail data
-      setactiveMailListData(activeMailData);
+    const keyName = tabName.toLowerCase();
+    if (globalMailBoxData) {
+      setactiveMailListData(globalMailBoxData[keyName]);
+      setSelectedPage({ page: 0, pageid: "" });
     }
   };
+
+  const getActiveMailData = async () => {};
 
   return (
     <div className="w-full h-full bg-neutral-900">
@@ -142,7 +137,7 @@ function MailPage() {
         />
         <div className="h-screen w-full flex gap-2 pt-18 p-2">
           <MailList mailList={activeMailListData} />
-          <ReadMail />
+          {activeMail && <ReadMail activeMail={activeMail} />}
         </div>
       </div>
     </div>

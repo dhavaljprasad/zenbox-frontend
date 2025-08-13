@@ -34,7 +34,7 @@ function MailList({ mailList }: { mailList: any }) {
     <div className="h-full w-1/2 flex flex-col bg-black rounded-xl">
       {/* header */}
       <div className="w-full h-14 flex items-center">
-        <h1 className="text-white text-xl font-semibold px-2">
+        <h1 className="text-white text-xl font-semibold px-2 uppercase">
           {mailList?.title}
         </h1>
       </div>
