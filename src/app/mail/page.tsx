@@ -132,7 +132,6 @@ function MailPage() {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getMailData`,
         {
           accessToken: accessToken,
-          // messageId: messageId,
           threadId: threadId,
         },
         {
@@ -142,7 +141,6 @@ function MailPage() {
         }
       );
       setActiveMail(response.data);
-      // console.log(response.data, "responseData");
     } catch (error) {
       console.warn(`Following Error Occurred: ${error}`);
     }

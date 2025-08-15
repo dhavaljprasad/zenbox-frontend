@@ -1,47 +1,101 @@
 "use client";
+import { getAccessToken } from "@/utils/functions";
+import React, { useEffect, useState } from "react";
 
-import React from "react";
-
-// You should define an interface for the activeMail data for better type safety
-interface MessagePart {
+// Updated interface to reflect the new backend response
+interface MessageBody {
   type: string;
   data: string;
 }
 
 interface ThreadMessage {
-  id: string;
-  senderName: string;
-  senderEmail: string;
-  receiverName: string;
-  isSent: boolean;
-  message: MessagePart[];
-  attachments: any[]; // You can define a specific type here as well
-  time: string;
-  labels: string[];
-  isStarred: boolean;
+  subject: string;
+  threads: {
+    id: string;
+    senderName: string;
+    senderEmail: string;
+    receiverName: string;
+    isSent: boolean;
+    message: MessageBody;
+    attachments: any[];
+    time: string;
+    labels: string[];
+    isStarred: boolean;
+  }[];
 }
 
-function ReadMail({ activeMail }: { activeMail: ThreadMessage[] | null }) {
-  console.log(activeMail, "activeMail");
+function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  console.log(activeMail, "active");
+
+  const getIframeHtml = (htmlContent: string) => {
+    return `
+      <html>
+        <head>
+          <style>
+            * {
+              color: #e5e5e5 !important;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              margin: 0;
+              background-color: #171717;
+            }
+            img, table {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            div, p, span, a {
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+              /* These properties ensure links and other long text wrap */
+              word-break: break-word !important;
+              overflow-wrap: break-word !important;
+            }
+            a {
+              color: #4A90E2 !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${htmlContent || "No content to display."}
+        </body>
+      </html>
+    `;
+  };
+
+  useEffect(() => {
+    const fetchAccessToken = async () => {
+      try {
+        const token = await getAccessToken();
+        setAccessToken(token); // Store the token in state
+      } catch (error) {
+        console.error("Failed to fetch access token:", error);
+      }
+    };
+
+    fetchAccessToken();
+  }, []);
+
   return (
-    <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col">
+    <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col overflow-x-hidden">
+      {/* Header */}
       <div className="w-full flex-shrink-0 mb-4">
-        {/* You can display the subject or first message's subject here */}
-        <h1 className="text-white text-xl font-semibold uppercase">
-          Thread Conversation
+        <h1 className="text-white text-xl font-semibold whitespace-nowrap overflow-hidden text-ellipsis uppercase">
+          {activeMail?.subject}
         </h1>
       </div>
 
-      {/* The main scrollable area for all messages in the thread */}
-      <div className="w-full h-full overflow-y-auto scrollbar-hide space-y-4">
-        {activeMail?.map((message, index) => (
+      {/* The main component */}
+      <div className="w-full h-auto flex flex-col gap-4 scrollbar-hide">
+        {activeMail?.threads?.map((message, index) => (
           <div
             key={message.id || index}
-            className="bg-neutral-900 rounded-lg p-4 shadow-lg"
+            className="w-full h-auto flex flex-col gap-4 bg-neutral-900 rounded-lg p-4 shadow-lg overflow-x-hidden"
           >
             {/* Message Header */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+            <div className="w-full h-auto flex items-center justify-between">
+              <div className="flex flex-col justify-center">
                 <span className="font-bold text-white">
                   {message.senderName}
                 </span>
@@ -50,42 +104,34 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage[] | null }) {
                 </span>
               </div>
               <span className="text-sm text-gray-500">
-                {new Date(Number(message.time)).toLocaleString()}
+                {new Date(Number(message.time)).toLocaleString("en-US", {
+                  month: "numeric",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "numeric",
+                  hour12: true,
+                })}
               </span>
             </div>
-
-            {/* Message Body */}
-            <div>
-              {message.message.map((part, partIndex) => {
-                switch (part.type) {
-                  case "text/html":
-                    return (
-                      <div
-                        key={partIndex}
-                        dangerouslySetInnerHTML={{ __html: part.data }}
-                        className="text-gray-300 text-sm"
-                      ></div>
-                    );
-                  case "text/plain":
-                    return (
-                      <p key={partIndex} className="text-gray-300 text-sm">
-                        {part.data}
-                      </p>
-                    );
-                  // You can add more cases for images, PDFs, etc.
-                  default:
-                    return (
-                      <p
-                        key={partIndex}
-                        className="text-gray-500 text-sm italic"
-                      >
-                        [Attachment: {part.type}]
-                      </p>
-                    );
-                }
-              })}
+            {/* Message Body inside an iframe */}
+            <div className="w-full h-auto">
+              {message.message.type === "html" ? (
+                <iframe
+                  title={`email-body-${message.id}`}
+                  className="w-full h-[600px] border-none bg-transparent"
+                  sandbox="allow-same-origin"
+                  srcDoc={getIframeHtml(message.message.data)}
+                />
+              ) : (
+                <p
+                  className="text-gray-300 text-sm"
+                  style={{ whiteSpace: "pre-wrap" }}
+                >
+                  {message.message.data}
+                </p>
+              )}
             </div>
-
             {/* Attachments list (if any) */}
             {message.attachments && message.attachments.length > 0 && (
               <div className="mt-4 border-t border-neutral-700 pt-2">
@@ -94,7 +140,17 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage[] | null }) {
                 </h4>
                 <ul className="list-disc list-inside text-gray-500 text-sm">
                   {message.attachments.map((attachment, attIndex) => (
-                    <li key={attIndex}>{attachment.filename}</li>
+                    <li key={attIndex}>
+                      {/* Create a link to your backend route */}
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getAttachment?accessToken=${accessToken}&messageId=${message.id}&attachmentId=${attachment.attachmentId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline"
+                      >
+                        {attachment.filename}
+                      </a>
+                    </li>
                   ))}
                 </ul>
               </div>
