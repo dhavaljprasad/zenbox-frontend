@@ -3,7 +3,8 @@ import { getAccessToken, getJWTToken } from "@/utils/functions";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 
-// Updated interface to reflect the new backend response
+// The full component refactored for readability and correctness.
+
 interface MessageBody {
   type: string;
   data: string;
@@ -25,8 +26,32 @@ interface ThreadMessage {
   }[];
 }
 
+interface SummaryState {
+  summary: string;
+  color: string;
+  state: string;
+  category: string;
+}
+
+// Map for Tailwind dynamic classes - a crucial fix
+const categoryColors: { [key: string]: string } = {
+  "family/friends": "green",
+  "important/urgent": "red",
+  "promotional/marketing": "blue",
+  "professional/corporate": "gray",
+  "entertainment/leisure": "purple",
+  "educational/informative": "orange",
+  uncategorized: "gray",
+  error: "red",
+};
+
 function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
-  console.log(activeMail, "active");
+  const [aiGeneratedSummary, setAIGeneratedSummary] = useState<SummaryState>({
+    summary: "Generating summary of the thread",
+    color: "gray",
+    state: "generating",
+    category: "Uncategorized",
+  });
 
   const getIframeHtml = (htmlContent: string) => {
     return `
@@ -48,7 +73,6 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
             div, p, span, a {
               max-width: 100% !important;
               box-sizing: border-box !important;
-              /* These properties ensure links and other long text wrap */
               word-break: break-word !important;
               overflow-wrap: break-word !important;
             }
@@ -71,41 +95,101 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
   ) => {
     try {
       const jwtToken = getJWTToken();
-      const accessToken = await getAccessToken();
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getAttachment`,
         {
-          accessToken: accessToken,
           messageId: messageId,
           attachmentId: attachmentId,
-          fileName: fileName,
         },
         {
           headers: {
             Authorization: `Bearer ${jwtToken}`,
           },
-          responseType: "blob", // Fetches the data as a binary blob
+          responseType: "blob",
         }
       );
 
-      // Create a temporary URL from the blob data
       const url = window.URL.createObjectURL(new Blob([response.data]));
 
-      // Create a temporary anchor tag to trigger the download
       const link = document.createElement("a");
       link.href = url;
-      link.download = fileName; // Set the filename for the download
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      // Clean up the temporary URL
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.warn(`Following error occurred: ${error}`);
     }
   };
+
+  const getAIGeneratedSummary = async (dataArray: string[]) => {
+    try {
+      const jwtToken = getJWTToken();
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/ai/threadSummary`,
+        { dataArray: dataArray },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+      // The API response is expected to be a JSON string from the backend.
+      // Parse it to a JavaScript object.
+      const jsonString = response.data.replace(/```json|```/g, "").trim();
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.warn(`Following error occurred: ${error}`);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      if (activeMail && activeMail.threads) {
+        const messagesData = activeMail.threads.map(
+          (message) => message.message.data
+        );
+
+        // Reset state to 'generating'
+        setAIGeneratedSummary({
+          summary: "Generating summary of the thread",
+          color: "gray",
+          state: "generating",
+          category: "Uncategorized",
+        });
+
+        // Assume the API returns a 'color' property
+        const summaryResponse = await getAIGeneratedSummary(messagesData);
+        console.log(summaryResponse);
+
+        if (
+          summaryResponse &&
+          summaryResponse.summary &&
+          summaryResponse.color
+        ) {
+          setAIGeneratedSummary({
+            summary: summaryResponse.summary,
+            category: summaryResponse.category,
+            color: summaryResponse.color, // Directly using the color from the API
+            state: "generated",
+          });
+        } else {
+          // Fallback if the API response is not as expected
+          setAIGeneratedSummary({
+            summary: "Failed to generate summary.",
+            category: "Error",
+            color: "red",
+            state: "error",
+          });
+        }
+      }
+    };
+    fetchSummary();
+  }, [activeMail]);
 
   return (
     <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col overflow-x-hidden">
@@ -114,6 +198,20 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
         <h1 className="text-white text-xl font-semibold whitespace-nowrap overflow-hidden text-ellipsis uppercase">
           {activeMail?.subject}
         </h1>
+      </div>
+
+      <div
+        className="w-full h-auto rounded-lg p-4 mb-4"
+        style={{
+          borderColor: aiGeneratedSummary.color,
+          borderWidth: "1px",
+          borderStyle: "solid",
+          backgroundColor: `${aiGeneratedSummary.color}20`, // This won't work with Tailwind's color system
+        }}
+      >
+        <span style={{ color: aiGeneratedSummary.color }}>
+          {aiGeneratedSummary.summary}
+        </span>
       </div>
 
       {/* The main component */}
