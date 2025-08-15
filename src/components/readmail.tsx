@@ -1,5 +1,6 @@
 "use client";
-import { getAccessToken } from "@/utils/functions";
+import { getAccessToken, getJWTToken } from "@/utils/functions";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 
 // Updated interface to reflect the new backend response
@@ -25,7 +26,6 @@ interface ThreadMessage {
 }
 
 function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   console.log(activeMail, "active");
 
   const getIframeHtml = (htmlContent: string) => {
@@ -64,18 +64,48 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
     `;
   };
 
-  useEffect(() => {
-    const fetchAccessToken = async () => {
-      try {
-        const token = await getAccessToken();
-        setAccessToken(token); // Store the token in state
-      } catch (error) {
-        console.error("Failed to fetch access token:", error);
-      }
-    };
+  const handleAttachmentClick = async (
+    messageId: string,
+    attachmentId: string,
+    fileName: string
+  ) => {
+    try {
+      const jwtToken = getJWTToken();
+      const accessToken = await getAccessToken();
 
-    fetchAccessToken();
-  }, []);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getAttachment`,
+        {
+          accessToken: accessToken,
+          messageId: messageId,
+          attachmentId: attachmentId,
+          fileName: fileName,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+          responseType: "blob", // Fetches the data as a binary blob
+        }
+      );
+
+      // Create a temporary URL from the blob data
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      // Create a temporary anchor tag to trigger the download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName; // Set the filename for the download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the temporary URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.warn(`Following error occurred: ${error}`);
+    }
+  };
 
   return (
     <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col overflow-x-hidden">
@@ -141,15 +171,18 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
                 <ul className="list-disc list-inside text-gray-500 text-sm">
                   {message.attachments.map((attachment, attIndex) => (
                     <li key={attIndex}>
-                      {/* Create a link to your backend route */}
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getAttachment?accessToken=${accessToken}&messageId=${message.id}&attachmentId=${attachment.attachmentId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline"
+                      <button
+                        onClick={() =>
+                          handleAttachmentClick(
+                            message.id,
+                            attachment.attachmentId,
+                            attachment.filename
+                          )
+                        }
+                        className="text-blue-400 hover:underline cursor-pointer"
                       >
                         {attachment.filename}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
