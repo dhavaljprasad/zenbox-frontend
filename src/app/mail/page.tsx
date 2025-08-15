@@ -124,7 +124,29 @@ function MailPage() {
     }
   };
 
-  const getActiveMailData = async () => {};
+  const getActiveMailData = async (messageId: string, threadId: string) => {
+    try {
+      const jwtToken = getJWTToken();
+      const accessToken = await getAccessToken();
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getMailData`,
+        {
+          accessToken: accessToken,
+          // messageId: messageId,
+          threadId: threadId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+      setActiveMail(response.data);
+      // console.log(response.data, "responseData");
+    } catch (error) {
+      console.warn(`Following Error Occurred: ${error}`);
+    }
+  };
 
   return (
     <div className="w-full h-full bg-neutral-900">
@@ -136,7 +158,10 @@ function MailPage() {
           setSelectedTab={switchSideBarTab}
         />
         <div className="h-screen w-full flex gap-2 pt-18 p-2">
-          <MailList mailList={activeMailListData} />
+          <MailList
+            mailList={activeMailListData}
+            setActiveMail={getActiveMailData}
+          />
           {activeMail && <ReadMail activeMail={activeMail} />}
         </div>
       </div>

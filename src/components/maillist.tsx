@@ -3,11 +3,19 @@ import React from "react";
 
 import { getAlphabetAndBackground } from "@/utils/functions";
 
-const MailChatBox = ({ data }: { data: any }) => {
+const MailChatBox = ({
+  data,
+  setActiveMail,
+}: {
+  data: any;
+  setActiveMail: (messageId: string, threadId: string) => void;
+}) => {
   const { alphabet, background } = getAlphabetAndBackground(data.sender.name);
+  // console.log(data, "data");
   return (
     <div
       className={`w-full h-16 flex items-center gap-2 p-2 border-t border-gray-400 cursor-pointer hover:bg-neutral-700 flex-shrink-0`}
+      onClick={() => setActiveMail(data.messageId, data.threadId)}
     >
       <div
         className="w-10 h-10 flex items-center justify-center rounded-4xl"
@@ -29,7 +37,13 @@ const MailChatBox = ({ data }: { data: any }) => {
   );
 };
 
-function MailList({ mailList }: { mailList: any }) {
+function MailList({
+  mailList,
+  setActiveMail,
+}: {
+  mailList: any;
+  setActiveMail: (messageId: string, threadId: string) => void;
+}) {
   return (
     <div className="h-full w-1/2 flex flex-col bg-black rounded-xl">
       {/* header */}
@@ -41,7 +55,13 @@ function MailList({ mailList }: { mailList: any }) {
       {/* mail list chat */}
       <div className="w-full h-full flex flex-col overflow-y-auto scrollbar-hide">
         {mailList?.messages.map((items, itemsIndex) => {
-          return <MailChatBox data={items} key={itemsIndex} />;
+          return (
+            <MailChatBox
+              data={items}
+              key={itemsIndex}
+              setActiveMail={setActiveMail}
+            />
+          );
         })}
       </div>
     </div>
