@@ -186,7 +186,7 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
       </div>
 
       <div
-        className="w-full h-auto rounded-lg p-4 mb-4"
+        className="w-full h-auto rounded-lg p-4 mb-4 flex flex-col gap-2 items-end"
         style={{
           borderColor: aiGeneratedSummary.color,
           borderWidth: "1px",
@@ -194,8 +194,14 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
           backgroundColor: `${aiGeneratedSummary.color}20`, // This won't work with Tailwind's color system
         }}
       >
-        <span style={{ color: aiGeneratedSummary.color }}>
+        <p style={{ color: aiGeneratedSummary.color }}>
           {aiGeneratedSummary.summary}
+        </p>
+        <span
+          className="text-xl font-semibold"
+          style={{ alignContent: "end", color: aiGeneratedSummary.color }}
+        >
+          {aiGeneratedSummary.category}
         </span>
       </div>
 
