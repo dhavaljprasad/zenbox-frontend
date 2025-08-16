@@ -1,15 +1,12 @@
 "use client";
-import { getAccessToken, getJWTToken } from "@/utils/functions";
+import { getJWTToken } from "@/utils/functions";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-
-// The full component refactored for readability and correctness.
 
 interface MessageBody {
   type: string;
   data: string;
 }
-
 interface ThreadMessage {
   subject: string;
   threads: {
@@ -25,25 +22,12 @@ interface ThreadMessage {
     isStarred: boolean;
   }[];
 }
-
 interface SummaryState {
   summary: string;
   color: string;
   state: string;
   category: string;
 }
-
-// Map for Tailwind dynamic classes - a crucial fix
-const categoryColors: { [key: string]: string } = {
-  "family/friends": "green",
-  "important/urgent": "red",
-  "promotional/marketing": "blue",
-  "professional/corporate": "gray",
-  "entertainment/leisure": "purple",
-  "educational/informative": "orange",
-  uncategorized: "gray",
-  error: "red",
-};
 
 function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
   const [aiGeneratedSummary, setAIGeneratedSummary] = useState<SummaryState>({
@@ -55,37 +39,39 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
 
   const getIframeHtml = (htmlContent: string) => {
     return `
-      <html>
-        <head>
-          <style>
-            * {
-              color: #e5e5e5 !important;
-            }
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-              margin: 0;
-              background-color: #171717;
-            }
-            img, table {
-              max-width: 100% !important;
-              height: auto !important;
-            }
-            div, p, span, a {
-              max-width: 100% !important;
-              box-sizing: border-box !important;
-              word-break: break-word !important;
-              overflow-wrap: break-word !important;
-            }
-            a {
-              color: #4A90E2 !important;
-            }
-          </style>
-        </head>
-        <body>
-          ${htmlContent || "No content to display."}
-        </body>
-      </html>
-    `;
+    <html>
+      <head>
+        <style>
+          * {
+            color: white !important;            /* base color */
+            mix-blend-mode: difference !important;
+            max-width: 100% !important;   /* 🔑 keep everything inside parent width */
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #171717;
+            height: auto !important;
+            max-width: 100% !important;   /* 🔑 never exceed container */
+            overflow-x: hidden !important;/* 🔑 disable horizontal scroll */
+          }
+          img, table {
+            max-width: 100% !important;
+            height: auto !important;
+          }
+          div, p, span, a {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+          }
+        </style>
+      </head>
+      <body>
+        ${htmlContent || "No content to display."}
+      </body>
+    </html>
+  `;
   };
 
   const handleAttachmentClick = async (
@@ -164,7 +150,6 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
 
         // Assume the API returns a 'color' property
         const summaryResponse = await getAIGeneratedSummary(messagesData);
-        console.log(summaryResponse);
 
         if (
           summaryResponse &&
@@ -192,9 +177,9 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
   }, [activeMail]);
 
   return (
-    <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col overflow-x-hidden">
+    <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col">
       {/* Header */}
-      <div className="w-full flex-shrink-0 mb-4">
+      <div className="max-w-full overflow-hidden flex-shrink-0 mb-4">
         <h1 className="text-white text-xl font-semibold whitespace-nowrap overflow-hidden text-ellipsis uppercase">
           {activeMail?.subject}
         </h1>
@@ -215,11 +200,11 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
       </div>
 
       {/* The main component */}
-      <div className="w-full h-auto flex flex-col gap-4 scrollbar-hide">
+      <div className="w-full h-full flex flex-col gap-4 scrollbar-hide overflow-y-scroll">
         {activeMail?.threads?.map((message, index) => (
           <div
             key={message.id || index}
-            className="w-full h-auto flex flex-col gap-4 bg-neutral-900 rounded-lg p-4 shadow-lg overflow-x-hidden"
+            className="w-full h-auto flex flex-col gap-4 bg-neutral-900 rounded-lg p-4 shadow-lg"
           >
             {/* Message Header */}
             <div className="w-full h-auto flex items-center justify-between">
@@ -243,11 +228,28 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
               </span>
             </div>
             {/* Message Body inside an iframe */}
-            <div className="w-full h-auto">
+            <div className="w-full">
               {message.message.type === "html" ? (
                 <iframe
+                  ref={(el) => {
+                    if (el) {
+                      el.onload = () => {
+                        try {
+                          const doc =
+                            el.contentDocument || el.contentWindow?.document;
+                          if (doc) {
+                            el.style.height = doc.body.scrollHeight + "px";
+                            el.style.width = "100%"; // force it to respect parent width
+                            el.style.overflow = "hidden";
+                          }
+                        } catch (e) {
+                          console.warn("Iframe resize failed:", e);
+                        }
+                      };
+                    }
+                  }}
                   title={`email-body-${message.id}`}
-                  className="w-full h-[600px] border-none bg-transparent"
+                  className="w-full border-none bg-transparent"
                   sandbox="allow-same-origin"
                   srcDoc={getIframeHtml(message.message.data)}
                 />

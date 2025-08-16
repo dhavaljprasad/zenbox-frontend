@@ -3,15 +3,26 @@ import React from "react";
 
 import { getAlphabetAndBackground } from "@/utils/functions";
 
+// Define a type for the data prop of MailChatBox
+interface MailData {
+  sender: {
+    name: string;
+    email: string;
+  };
+  subject: string;
+  isRead: boolean;
+  messageId: string;
+  threadId: string;
+}
+
 const MailChatBox = ({
   data,
   setActiveMail,
 }: {
-  data: any;
+  data: MailData;
   setActiveMail: (messageId: string, threadId: string) => void;
 }) => {
   const { alphabet, background } = getAlphabetAndBackground(data.sender.name);
-  // console.log(data, "data");
   return (
     <div
       className={`w-full h-16 flex items-center gap-2 p-2 border-t border-gray-400 cursor-pointer hover:bg-neutral-700 flex-shrink-0`}
@@ -37,11 +48,17 @@ const MailChatBox = ({
   );
 };
 
+// Define a type for the data prop of the MailList component
+interface MailListData {
+  title: string;
+  messages: MailData[]; // Use the MailData interface here
+}
+
 function MailList({
   mailList,
   setActiveMail,
 }: {
-  mailList: any;
+  mailList: MailListData;
   setActiveMail: (messageId: string, threadId: string) => void;
 }) {
   return (
@@ -54,11 +71,11 @@ function MailList({
       </div>
       {/* mail list chat */}
       <div className="w-full h-full flex flex-col overflow-y-auto scrollbar-hide">
-        {mailList?.messages.map((items, itemsIndex) => {
+        {mailList?.messages.map((item: MailData, index: number) => {
           return (
             <MailChatBox
-              data={items}
-              key={itemsIndex}
+              data={item}
+              key={index}
               setActiveMail={setActiveMail}
             />
           );
