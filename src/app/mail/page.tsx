@@ -29,6 +29,13 @@ interface SelectedPage {
   pageid?: string;
 }
 
+interface ActiveMailListState {
+  messages: any[]; // Or a more specific type like Message[]
+  nextPageToken: string;
+  resultSizeEstimate: number;
+  title?: string; // The '?' here correctly marks the property as optional
+}
+
 function MailPage() {
   const [userData, setUserData] = useState<ZenboxJwtPayload | null>(null);
   const [sideBarConfig, setSideBarConfig] = useState(SideBarConfig);
@@ -40,7 +47,13 @@ function MailPage() {
     page: 0,
     pageid: "",
   });
-  const [activeMailListData, setactiveMailListData] = useState();
+  const [activeMailListData, setactiveMailListData] =
+    useState<ActiveMailListState>({
+      messages: [],
+      nextPageToken: "",
+      resultSizeEstimate: 0,
+      title: "",
+    });
   const [activeMail, setActiveMail] = useState();
 
   useEffect(() => {
@@ -133,6 +146,7 @@ function MailPage() {
         {
           accessToken: accessToken,
           threadId: threadId,
+          messageId: messageId,
         },
         {
           headers: {
@@ -140,7 +154,27 @@ function MailPage() {
           },
         }
       );
+
       setActiveMail(response.data);
+
+      const updatedState = activeMailListData
+        ? {
+            ...activeMailListData,
+            messages: activeMailListData.messages.map((message) => {
+              if (message.messageId === messageId) {
+                return {
+                  ...message,
+                  isRead: true,
+                };
+              }
+              return message;
+            }),
+          }
+        : null;
+
+      if (updatedState) {
+        setactiveMailListData(updatedState);
+      }
     } catch (error) {
       console.warn(`Following Error Occurred: ${error}`);
     }

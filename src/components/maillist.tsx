@@ -61,6 +61,8 @@ function MailList({
   mailList: MailListData;
   setActiveMail: (messageId: string, threadId: string) => void;
 }) {
+  console.log(mailList, "maillist");
+
   return (
     <div className="h-full w-1/2 flex flex-col bg-black rounded-xl">
       {/* header */}
@@ -80,6 +82,11 @@ function MailList({
             />
           );
         })}
+      </div>
+
+      {/* pagination */}
+      <div className="w-full h-14 flex items-center justify-between px-2">
+        <span>{`Page No: }`}</span>
       </div>
     </div>
   );
