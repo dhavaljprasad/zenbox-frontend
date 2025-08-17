@@ -32,6 +32,7 @@ interface SelectedPage {
 interface ActiveMailListState {
   messages: any[]; // Or a more specific type like Message[]
   nextPageToken: string;
+  pageNo: number;
   resultSizeEstimate: number;
   title?: string; // The '?' here correctly marks the property as optional
 }
@@ -43,14 +44,15 @@ function MailPage() {
     sideBarConfig[0].contents[0].title
   );
   const [globalMailBoxData, setGlobalMailboxData] = useState();
-  const [selectedPage, setSelectedPage] = useState<SelectedPage>({
-    page: 0,
-    pageid: "",
-  });
+  // const [selectedPage, setSelectedPage] = useState<SelectedPage>({
+  //   page: 0,
+  //   pageid: "",
+  // });
   const [activeMailListData, setactiveMailListData] =
     useState<ActiveMailListState>({
       messages: [],
       nextPageToken: "",
+      pageNo: 1,
       resultSizeEstimate: 0,
       title: "",
     });
@@ -78,7 +80,7 @@ function MailPage() {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/allmail`,
         {
           accessToken: accessToken,
-          selectedPageId: selectedPage.pageid,
+          selectedPageId: "",
         },
         {
           headers: {
@@ -88,8 +90,13 @@ function MailPage() {
       );
 
       let mailboxData = response.data;
+      for (const key in response.data) {
+        if (Object.prototype.hasOwnProperty.call(response.data, key)) {
+          response.data[key].pageNo = 1;
+        }
+      }
       setGlobalMailboxData(response.data);
-      const updatedConfig = [...sideBarConfig]; // Create a shallow copy of the state
+      const updatedConfig = [...sideBarConfig];
 
       // Update the contents of the 'Flow' section
       updatedConfig[0].contents.forEach((item) => {
@@ -113,8 +120,6 @@ function MailPage() {
         }
       });
 
-      console.log(globalMailBoxData, updatedConfig);
-
       setSideBarConfig(updatedConfig);
       setactiveMailListData(mailboxData.inbox);
     } catch (error) {
@@ -133,7 +138,7 @@ function MailPage() {
     const keyName = tabName.toLowerCase();
     if (globalMailBoxData) {
       setactiveMailListData(globalMailBoxData[keyName]);
-      setSelectedPage({ page: 0, pageid: "" });
+      // setSelectedPage({ page: 0, pageid: "" });
     }
   };
 

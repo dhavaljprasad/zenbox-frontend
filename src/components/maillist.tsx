@@ -1,9 +1,14 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import {
+  getAccessToken,
+  getAlphabetAndBackground,
+  getJWTToken,
+} from "@/utils/functions";
+import { IoIosArrowDropleft } from "react-icons/io";
+import { IoIosArrowDropright } from "react-icons/io";
+import axios from "axios";
 
-import { getAlphabetAndBackground } from "@/utils/functions";
-
-// Define a type for the data prop of MailChatBox
 interface MailData {
   sender: {
     name: string;
@@ -48,10 +53,12 @@ const MailChatBox = ({
   );
 };
 
-// Define a type for the data prop of the MailList component
 interface MailListData {
-  title: string;
-  messages: MailData[]; // Use the MailData interface here
+  title?: string;
+  messages: MailData[];
+  nextPageToken: string;
+  pageNo: number;
+  resultSizeEstimate: number;
 }
 
 function MailList({
@@ -61,24 +68,129 @@ function MailList({
   mailList: MailListData;
   setActiveMail: (messageId: string, threadId: string) => void;
 }) {
-  console.log(mailList, "maillist");
+  const [currentMailList, setMailList] = useState(mailList);
+  const [currentArrayOfMessages, setCurrentArrayOfMessages] = useState(
+    mailList?.messages || []
+  );
+
+  // Removed `pageNo` state and use `currentMailList.pageNo` instead for a single source of truth.
+
+  // This useEffect now only handles the initial data load from the parent.
+  // It won't run when local state changes from navigation clicks.
+  useEffect(() => {
+    if (mailList && mailList.messages && mailList.messages.length > 0) {
+      setMailList(mailList);
+      setCurrentArrayOfMessages(mailList.messages);
+    }
+  }, [mailList]);
+
+  const navigateListPage = async (state: string) => {
+    if (state === "next") {
+      // Find the start index of the currently displayed messages
+      const currentStartIndex = currentMailList.messages.findIndex(
+        (message) => message.messageId === currentArrayOfMessages[0]?.messageId
+      );
+
+      const nextStartIndex = currentStartIndex + currentArrayOfMessages.length;
+
+      if (currentMailList.messages[nextStartIndex]) {
+        const nextMessages = currentMailList.messages.slice(
+          nextStartIndex,
+          nextStartIndex + 20
+        );
+        setCurrentArrayOfMessages(nextMessages);
+        setMailList((prevMailList) => ({
+          ...prevMailList,
+          pageNo: prevMailList.pageNo + 1,
+        }));
+      } else {
+        try {
+          const jwtToken = getJWTToken();
+          const accessToken = await getAccessToken();
+          const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/nextMailSet`,
+            {
+              accessToken: accessToken,
+              nextPageToken: currentMailList.nextPageToken,
+              type: mailList.title,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${jwtToken}`,
+              },
+            }
+          );
+
+          const newMailData = response.data;
+
+          // Update the full mail list state with the new messages
+          setMailList((prevMailList) => ({
+            ...prevMailList,
+            messages: [...prevMailList.messages, ...newMailData.messages],
+            nextPageToken: newMailData.nextPageToken,
+            resultSizeEstimate: newMailData.resultSizeEstimate,
+            pageNo: prevMailList.pageNo + 1,
+          }));
+
+          // Use the newly fetched messages to update the displayed list
+          setCurrentArrayOfMessages(newMailData.messages);
+        } catch (error) {
+          console.warn(`API Error failed: ${error}`);
+        }
+      }
+    } else {
+      if (currentMailList.pageNo <= 1) {
+        return;
+      }
+
+      const currentStartIndex = currentMailList.messages.findIndex(
+        (message) => message.messageId === currentArrayOfMessages[0]?.messageId
+      );
+
+      const previousStartIndex = currentStartIndex - 20;
+
+      const previousMessages = currentMailList.messages.slice(
+        Math.max(0, previousStartIndex),
+        currentStartIndex
+      );
+
+      setCurrentArrayOfMessages(previousMessages);
+      setMailList((prevMailList) => ({
+        ...prevMailList,
+        pageNo: prevMailList.pageNo - 1,
+      }));
+    }
+  };
+
+  const handleSetActiveMail = (messageId: string, threadId: string) => {
+    setActiveMail(messageId, threadId);
+
+    const updatedMessages = currentArrayOfMessages.map((message) => {
+      if (message.messageId === messageId) {
+        return { ...message, isRead: true };
+      }
+      return message;
+    });
+
+    setCurrentArrayOfMessages(updatedMessages);
+  };
 
   return (
     <div className="h-full w-1/2 flex flex-col bg-black rounded-xl">
       {/* header */}
       <div className="w-full h-14 flex items-center">
         <h1 className="text-white text-xl font-semibold px-2 uppercase">
-          {mailList?.title}
+          {currentMailList?.title}
         </h1>
       </div>
       {/* mail list chat */}
       <div className="w-full h-full flex flex-col overflow-y-auto scrollbar-hide">
-        {mailList?.messages.map((item: MailData, index: number) => {
+        {currentArrayOfMessages.map((item: MailData, index: number) => {
           return (
             <MailChatBox
               data={item}
               key={index}
-              setActiveMail={setActiveMail}
+              setActiveMail={handleSetActiveMail}
             />
           );
         })}
@@ -86,7 +198,22 @@ function MailList({
 
       {/* pagination */}
       <div className="w-full h-14 flex items-center justify-between px-2">
-        <span>{`Page No: }`}</span>
+        <span className="text-white text-sm font-semibold">{`Total Result: ${currentMailList.resultSizeEstimate}`}</span>
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-white text-sm font-semibold">{`Page No: ${currentMailList.pageNo}`}</span>
+          <div
+            className="cursor-pointer"
+            onClick={() => navigateListPage("prev")}
+          >
+            <IoIosArrowDropleft color="#fff" size={30} />
+          </div>
+          <div
+            className="cursor-pointer"
+            onClick={() => navigateListPage("next")}
+          >
+            <IoIosArrowDropright color="#fff" size={30} />
+          </div>
+        </div>
       </div>
     </div>
   );
