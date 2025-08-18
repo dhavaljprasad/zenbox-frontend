@@ -24,11 +24,6 @@ interface ZenboxJwtPayload {
   iat?: number;
 }
 
-interface SelectedPage {
-  page: number;
-  pageid?: string;
-}
-
 interface ActiveMailListState {
   messages: any[]; // Or a more specific type like Message[]
   nextPageToken: string;

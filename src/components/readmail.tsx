@@ -1,5 +1,5 @@
 "use client";
-import { getJWTToken } from "@/utils/functions";
+import { getAccessToken, getJWTToken } from "@/utils/functions";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 
@@ -79,14 +79,17 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
     attachmentId: string,
     fileName: string
   ) => {
+    console.log(messageId, attachmentId, fileName);
     try {
       const jwtToken = getJWTToken();
-
+      const accessToken = await getAccessToken();
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getAttachment`,
         {
+          accessToken: accessToken,
           messageId: messageId,
           attachmentId: attachmentId,
+          fileName: fileName,
         },
         {
           headers: {

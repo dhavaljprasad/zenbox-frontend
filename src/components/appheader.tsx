@@ -45,12 +45,14 @@ function AppHeader() {
           About
         </span>
         {userData ? (
-          <PrimaryButton
-            text="Go to Mail"
-            onClick={() => {
-              router.push("/mail");
-            }}
-          />
+          <>
+            <PrimaryButton
+              text="Go to Mail"
+              onClick={() => {
+                router.push("/mail");
+              }}
+            />
+          </>
         ) : (
           <PrimaryButton
             text="Get Started"
