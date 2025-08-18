@@ -138,7 +138,6 @@ function MailPage() {
     const keyName = tabName.toLowerCase();
     if (globalMailBoxData) {
       setactiveMailListData(globalMailBoxData[keyName]);
-      // setSelectedPage({ page: 0, pageid: "" });
     }
   };
 
@@ -162,24 +161,24 @@ function MailPage() {
 
       setActiveMail(response.data);
 
-      const updatedState = activeMailListData
-        ? {
-            ...activeMailListData,
-            messages: activeMailListData.messages.map((message) => {
-              if (message.messageId === messageId) {
-                return {
-                  ...message,
-                  isRead: true,
-                };
-              }
-              return message;
-            }),
-          }
-        : null;
+      // const updatedState = activeMailListData
+      //   ? {
+      //       ...activeMailListData,
+      //       messages: activeMailListData.messages.map((message) => {
+      //         if (message.messageId === messageId) {
+      //           return {
+      //             ...message,
+      //             isRead: true,
+      //           };
+      //         }
+      //         return message;
+      //       }),
+      //     }
+      //   : null;
 
-      if (updatedState) {
-        setactiveMailListData(updatedState);
-      }
+      // if (updatedState) {
+      //   setactiveMailListData(updatedState);
+      // }
     } catch (error) {
       console.warn(`Following Error Occurred: ${error}`);
     }

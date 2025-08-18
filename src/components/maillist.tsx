@@ -72,11 +72,6 @@ function MailList({
   const [currentArrayOfMessages, setCurrentArrayOfMessages] = useState(
     mailList?.messages || []
   );
-
-  // Removed `pageNo` state and use `currentMailList.pageNo` instead for a single source of truth.
-
-  // This useEffect now only handles the initial data load from the parent.
-  // It won't run when local state changes from navigation clicks.
   useEffect(() => {
     if (mailList && mailList.messages && mailList.messages.length > 0) {
       setMailList(mailList);
@@ -86,7 +81,6 @@ function MailList({
 
   const navigateListPage = async (state: string) => {
     if (state === "next") {
-      // Find the start index of the currently displayed messages
       const currentStartIndex = currentMailList.messages.findIndex(
         (message) => message.messageId === currentArrayOfMessages[0]?.messageId
       );
@@ -163,16 +157,33 @@ function MailList({
   };
 
   const handleSetActiveMail = (messageId: string, threadId: string) => {
+    // 1. Call the parent's function to update the global mail list
     setActiveMail(messageId, threadId);
 
-    const updatedMessages = currentArrayOfMessages.map((message) => {
+    // 2. Update the local view (current page) to show the change immediately
+    const updatedCurrentMessages = currentArrayOfMessages.map((message) => {
       if (message.messageId === messageId) {
         return { ...message, isRead: true };
       }
       return message;
     });
 
-    setCurrentArrayOfMessages(updatedMessages);
+    setCurrentArrayOfMessages(updatedCurrentMessages);
+
+    // 3. Update the full, cached mail list so the change persists on navigation
+    setMailList((prevMailList) => {
+      const fullUpdatedMessages = prevMailList.messages.map((message) => {
+        if (message.messageId === messageId) {
+          return { ...message, isRead: true };
+        }
+        return message;
+      });
+
+      return {
+        ...prevMailList,
+        messages: fullUpdatedMessages,
+      };
+    });
   };
 
   return (
