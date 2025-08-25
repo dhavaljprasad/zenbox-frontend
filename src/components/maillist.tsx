@@ -190,7 +190,7 @@ function MailList({
     <div className="h-full w-1/2 flex flex-col bg-black rounded-xl">
       {/* header */}
       <div className="w-full h-14 flex items-center">
-        <h1 className="text-white text-xl font-semibold px-2 uppercase">
+        <h1 className="text-white text-xl font-bold px-2 uppercase cursor-pointer">
           {currentMailList?.title}
         </h1>
       </div>

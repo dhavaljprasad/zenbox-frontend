@@ -1,7 +1,8 @@
 "use client";
-import { getAccessToken, getJWTToken } from "@/utils/functions";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { getAccessToken, getJWTToken } from "@/utils/functions";
+import { GetIframeHTML } from "@/utils/configs";
 
 interface MessageBody {
   type: string;
@@ -36,43 +37,6 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
     state: "generating",
     category: "Uncategorized",
   });
-
-  const getIframeHtml = (htmlContent: string) => {
-    return `
-    <html>
-      <head>
-        <style>
-          * {
-            color: white !important;            /* base color */
-            mix-blend-mode: difference !important;
-            max-width: 100% !important;   /* 🔑 keep everything inside parent width */
-          }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            background-color: #171717;
-            height: auto !important;
-            max-width: 100% !important;   /* 🔑 never exceed container */
-            overflow-x: hidden !important;/* 🔑 disable horizontal scroll */
-          }
-          img, table {
-            max-width: 100% !important;
-            height: auto !important;
-          }
-          div, p, span, a {
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            word-break: break-word !important;
-            overflow-wrap: break-word !important;
-          }
-        </style>
-      </head>
-      <body>
-        ${htmlContent || "No content to display."}
-      </body>
-    </html>
-  `;
-  };
 
   const handleAttachmentClick = async (
     messageId: string,
@@ -180,10 +144,10 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
   }, [activeMail]);
 
   return (
-    <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col">
+    <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="max-w-full overflow-hidden flex-shrink-0 mb-4">
-        <h1 className="text-white text-xl font-semibold whitespace-nowrap overflow-hidden text-ellipsis uppercase">
+        <h1 className="text-white text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis uppercase">
           {activeMail?.subject}
         </h1>
       </div>
@@ -247,8 +211,15 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
                           const doc =
                             el.contentDocument || el.contentWindow?.document;
                           if (doc) {
-                            el.style.height = doc.body.scrollHeight + "px";
-                            el.style.width = "100%"; // force it to respect parent width
+                            const height = Math.max(
+                              doc.body.scrollHeight,
+                              doc.documentElement.scrollHeight,
+                              doc.body.offsetHeight,
+                              doc.documentElement.offsetHeight,
+                              doc.body.clientHeight,
+                              doc.documentElement.clientHeight
+                            );
+                            el.style.height = height + "px";
                             el.style.overflow = "hidden";
                           }
                         } catch (e) {
@@ -258,9 +229,9 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
                     }
                   }}
                   title={`email-body-${message.id}`}
-                  className="w-full border-none bg-transparent"
+                  className="w-full border-none bg-transparent overflow-hidden"
                   sandbox="allow-same-origin"
-                  srcDoc={getIframeHtml(message.message.data)}
+                  srcDoc={GetIframeHTML(message.message.data)}
                 />
               ) : (
                 <p
