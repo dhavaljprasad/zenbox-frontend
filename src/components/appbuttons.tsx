@@ -32,7 +32,7 @@ export const SidebarButton = ({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center gap-2 py-2 rounded-xs cursor-pointer transition duration-200 ${
+      className={`flex items-center gap-2 p-2 rounded-xs cursor-pointer transition duration-200 ${
         selected ? "bg-neutral-700" : "bg-neutral-900 hover:bg-neutral-700"
       }`}
     >

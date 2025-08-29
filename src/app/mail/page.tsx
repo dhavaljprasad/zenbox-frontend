@@ -114,6 +114,11 @@ function MailPage() {
     }
   };
 
+  const refreshEmails = () => {
+    getMailbox();
+    switchSideBarTab("Inbox");
+  };
+
   return (
     <div className="w-full h-full bg-black">
       <div className="h-full w-full flex items-center">
@@ -124,10 +129,9 @@ function MailPage() {
         />
         <div className="h-screen w-full flex">
           <MailList
+            refreshEmails={refreshEmails}
             mailList={activeMailListData}
-            setActiveMail={getActiveMailData}
           />
-          {activeMail && <ReadMail activeMail={activeMail} />}
         </div>
       </div>
     </div>

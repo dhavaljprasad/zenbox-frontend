@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { getAccessToken, getJWTToken } from "@/utils/functions";
 import { GetIframeHTML } from "@/utils/configs";
+import { AiOutlineCloseCircle } from "react-icons/ai";
 
 interface MessageBody {
   type: string;
@@ -30,7 +31,13 @@ interface SummaryState {
   category: string;
 }
 
-function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
+function ReadMail({
+  activeMail,
+  closeMail,
+}: {
+  activeMail: ThreadMessage;
+  closeMail: () => void;
+}) {
   const [aiGeneratedSummary, setAIGeneratedSummary] = useState<SummaryState>({
     summary: "Generating summary of the thread",
     color: "gray",
@@ -144,14 +151,22 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
   }, [activeMail]);
 
   return (
-    <div className="h-full w-1/2 bg-black rounded-xl p-4 flex flex-col overflow-hidden">
+    <div className="absolute h-full w-full-100 bg-black rounded-xl p-4 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="max-w-full overflow-hidden flex-shrink-0 mb-4">
+      <div className="max-w-full overflow-hidden flex-shrink-0 mb-4 flex items-center justify-between">
         <h1 className="text-white text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis uppercase">
           {activeMail?.subject}
         </h1>
+        <div className="p-2 hover:bg-neutral-700 rounded cursor-pointer">
+          <AiOutlineCloseCircle
+            size={24}
+            color="#fff"
+            onClick={() => closeMail()}
+          />
+        </div>
       </div>
 
+      {/* AI Generated Summary */}
       <div
         className="w-full h-auto rounded-lg p-4 mb-4 flex flex-col gap-2 items-end"
         style={{
@@ -177,7 +192,7 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
         {activeMail?.threads?.map((message, index) => (
           <div
             key={message.id || index}
-            className="w-full h-auto flex flex-col gap-4 bg-neutral-900 rounded-lg p-4 shadow-lg"
+            className="w-full h-[-webkit-fill-available] flex flex-col gap-4 bg-neutral-900 rounded-lg p-4 shadow-lg"
           >
             {/* Message Header */}
             <div className="w-full h-auto flex items-center justify-between">

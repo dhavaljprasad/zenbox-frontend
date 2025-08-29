@@ -35,6 +35,7 @@ export const GetIframeHTML = (htmlContent: string) => {
           * {
             color: #ffffff !important;
             mix-blend-mode: difference !important;  
+            box-sizing: border-box !important;
             max-width: 100% !important;
           }
 
@@ -68,8 +69,7 @@ export const GetIframeHTML = (htmlContent: string) => {
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            background-color: #000000;
-            max-width: 100% !important;
+            background-color: #171717;
           }
 
           img, table {

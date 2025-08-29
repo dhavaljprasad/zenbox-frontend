@@ -95,3 +95,20 @@ export const getAlphabetAndBackground = (data: string) => {
   alphabet = name.charAt(0).toUpperCase();
   return { alphabet, background };
 };
+
+export const formatTimestamp = (ms: string) => {
+  const date = new Date(Number(ms)); // ✅ convert string → number
+
+  if (isNaN(date.getTime())) {
+    return "Invalid Date";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
+  const day = String(date.getDate()).padStart(2, "0");
+
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${hours}:${minutes} on ${day}/${month}/${year}`;
+};
