@@ -50,25 +50,31 @@ export const getAccessToken = async () => {
 };
 
 export const getAlphabetAndBackground = (data: string) => {
-  const name = data;
+  const name = data || "";
   let alphabet = "-";
-  let background = "#666";
+  let background = "#666"; // default base gray
 
-  const googleColors =
-    "conic-gradient(from 0deg, #4285F4 0deg, #EA4335 90deg, #FBBC05 180deg, #34A853 270deg, #4285F4 360deg)";
-  const linkedInColor = "#0A66C2";
-  const highContrastColors = [
-    "#f44336",
-    "#e91e63",
-    "#9c27b0",
-    "#673ab7",
-    "#3f51b5",
-    "#2196f3",
-    "#03a9f4",
-    "#00bcd4",
-    "#009688",
-    "#4caf50",
-  ];
+  // Brand colors
+  const brandColors: Record<string, { letter: string; color: string }> = {
+    google: {
+      letter: "G",
+      color:
+        "conic-gradient(from 0deg, #4285F4 0deg, #EA4335 90deg, #FBBC05 180deg, #34A853 270deg, #4285F4 360deg)",
+    },
+    linkedin: { letter: "L", color: "#0A66C2" },
+    pinterest: { letter: "P", color: "#E60023" },
+    x: { letter: "X", color: "#000000" }, // X (Twitter) = black
+    twitter: { letter: "T", color: "#1DA1F2" }, // fallback if still says Twitter
+    github: { letter: "G", color: "#181717" },
+    instagram: {
+      letter: "I",
+      color:
+        "radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)",
+    },
+    reddit: { letter: "R", color: "#FF4500" },
+    threads: { letter: "T", color: "#000000" },
+    snapchat: { letter: "S", color: "#FFFC00" },
+  };
 
   if (!name || name.trim() === "") {
     return { alphabet, background };
@@ -76,17 +82,16 @@ export const getAlphabetAndBackground = (data: string) => {
 
   const nameLower = name.toLowerCase();
 
-  if (nameLower.includes("google")) {
-    alphabet = "G";
-    background = googleColors;
-  } else if (nameLower.includes("linkedin")) {
-    alphabet = "L";
-    background = linkedInColor;
-  } else {
-    alphabet = name.charAt(0).toUpperCase();
-    background =
-      highContrastColors[Math.floor(Math.random() * highContrastColors.length)];
+  // Check if it matches a known brand
+  for (const key in brandColors) {
+    if (nameLower.includes(key)) {
+      alphabet = brandColors[key].letter;
+      background = brandColors[key].color;
+      return { alphabet, background };
+    }
   }
 
+  // Default: first alphabet + gray background
+  alphabet = name.charAt(0).toUpperCase();
   return { alphabet, background };
 };

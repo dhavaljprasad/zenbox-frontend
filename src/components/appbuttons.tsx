@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 
 export const PrimaryButton = ({
   text,
@@ -18,25 +19,25 @@ export const PrimaryButton = ({
 };
 
 export const SidebarButton = ({
-  primaryText,
-  secondaryText = "",
+  Icon,
   onClick,
   selected = false,
+  title = "",
 }: {
-  primaryText: string;
-  secondaryText?: string;
+  Icon: React.ReactNode;
   onClick: () => void;
   selected?: boolean;
+  title?: string;
 }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer transition duration-200 ${
+      className={`flex items-center justify-center gap-2 py-2 rounded-xs cursor-pointer transition duration-200 ${
         selected ? "bg-neutral-700" : "bg-neutral-900 hover:bg-neutral-700"
       }`}
     >
-      <span className="text-sm font-semibold text-white">{primaryText}</span>
-      <span className="text-xs text-gray-400">{secondaryText}</span>
+      {Icon}
+      <span className="text-base text-white">{title}</span>
     </button>
   );
 };

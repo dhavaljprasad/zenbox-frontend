@@ -13,17 +13,6 @@ import { SideBarConfig } from "@/utils/configs";
 import { getAccessToken, getJWTToken } from "@/utils/functions";
 import ReadMail from "@/components/readmail";
 
-interface ZenboxJwtPayload {
-  id: string;
-  name: string;
-  email: string;
-  provider: string;
-  profileImage: string;
-  subscriptionTier: string;
-  exp?: number;
-  iat?: number;
-}
-
 interface ActiveMailListState {
   messages: any[]; // Or a more specific type like Message[]
   nextPageToken: string;
@@ -33,16 +22,11 @@ interface ActiveMailListState {
 }
 
 function MailPage() {
-  const [userData, setUserData] = useState<ZenboxJwtPayload | null>(null);
   const [sideBarConfig, setSideBarConfig] = useState(SideBarConfig);
   const [selectedTab, setSelectedTab] = useState<string>(
-    sideBarConfig[0].contents[0].title
+    sideBarConfig[0].title
   );
   const [globalMailBoxData, setGlobalMailboxData] = useState();
-  // const [selectedPage, setSelectedPage] = useState<SelectedPage>({
-  //   page: 0,
-  //   pageid: "",
-  // });
   const [activeMailListData, setactiveMailListData] =
     useState<ActiveMailListState>({
       messages: [],
@@ -54,16 +38,7 @@ function MailPage() {
   const [activeMail, setActiveMail] = useState();
 
   useEffect(() => {
-    const jwtToken = getJWTToken();
-
-    if (jwtToken) {
-      try {
-        const decodedToken = jwtDecode<ZenboxJwtPayload>(jwtToken as string);
-        setUserData(decodedToken);
-      } catch (error) {
-        console.error("Failed to decode JWT:", error);
-      }
-    }
+    getMailbox();
   }, []);
 
   const getMailbox = async () => {
@@ -122,12 +97,6 @@ function MailPage() {
     }
   };
 
-  useEffect(() => {
-    if (userData) {
-      getMailbox();
-    }
-  }, [userData]);
-
   const switchSideBarTab = (tabName: string) => {
     setSelectedTab(tabName);
     const keyName = tabName.toLowerCase();
@@ -155,40 +124,20 @@ function MailPage() {
       );
 
       setActiveMail(response.data);
-
-      // const updatedState = activeMailListData
-      //   ? {
-      //       ...activeMailListData,
-      //       messages: activeMailListData.messages.map((message) => {
-      //         if (message.messageId === messageId) {
-      //           return {
-      //             ...message,
-      //             isRead: true,
-      //           };
-      //         }
-      //         return message;
-      //       }),
-      //     }
-      //   : null;
-
-      // if (updatedState) {
-      //   setactiveMailListData(updatedState);
-      // }
     } catch (error) {
       console.warn(`Following Error Occurred: ${error}`);
     }
   };
 
   return (
-    <div className="w-full h-full bg-neutral-900">
-      <CommonHeader userData={userData} />
+    <div className="w-full h-full bg-black">
       <div className="h-full w-full flex items-center">
         <Sidebar
           SideBarConfig={sideBarConfig}
           selectedTab={selectedTab}
           setSelectedTab={switchSideBarTab}
         />
-        <div className="h-screen w-full flex gap-2 pt-18 p-2">
+        <div className="h-screen w-full flex gap-2 p-2">
           <MailList
             mailList={activeMailListData}
             setActiveMail={getActiveMailData}

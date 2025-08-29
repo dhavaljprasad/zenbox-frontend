@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 * {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 /* For all scrollbars in the application */

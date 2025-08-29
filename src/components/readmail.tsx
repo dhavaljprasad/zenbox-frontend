@@ -173,7 +173,7 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
       </div>
 
       {/* The main component */}
-      <div className="w-full h-full flex flex-col gap-4 scrollbar-hide overflow-y-scroll">
+      <div className="w-full h-full flex flex-col gap-4 scrollbar-hide overflow-y-auto">
         {activeMail?.threads?.map((message, index) => (
           <div
             key={message.id || index}
@@ -200,8 +200,9 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
                 })}
               </span>
             </div>
+
             {/* Message Body inside an iframe */}
-            <div className="w-full">
+            <div className="w-full h-full">
               {message.message.type === "html" ? (
                 <iframe
                   ref={(el) => {
@@ -211,16 +212,7 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
                           const doc =
                             el.contentDocument || el.contentWindow?.document;
                           if (doc) {
-                            const height = Math.max(
-                              doc.body.scrollHeight,
-                              doc.documentElement.scrollHeight,
-                              doc.body.offsetHeight,
-                              doc.documentElement.offsetHeight,
-                              doc.body.clientHeight,
-                              doc.documentElement.clientHeight
-                            );
-                            el.style.height = height + "px";
-                            el.style.overflow = "hidden";
+                            el.style.height = "100%";
                           }
                         } catch (e) {
                           console.warn("Iframe resize failed:", e);
@@ -229,7 +221,7 @@ function ReadMail({ activeMail }: { activeMail: ThreadMessage }) {
                     }
                   }}
                   title={`email-body-${message.id}`}
-                  className="w-full border-none bg-transparent overflow-hidden"
+                  className="w-full h-fit border-none bg-transparent overflow-hidden"
                   sandbox="allow-same-origin"
                   srcDoc={GetIframeHTML(message.message.data)}
                 />

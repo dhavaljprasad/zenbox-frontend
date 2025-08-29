@@ -35,7 +35,7 @@ function AppHeader() {
   }, []);
 
   return (
-    <div className="absolute w-full h-16 bg-black flex items-center justify-between px-30">
+    <div className="absolute w-full h-16 bg-neutral-950 flex items-center justify-between px-30">
       <h1 className="text-white text-2xl font-bold">Zenbox</h1>
       <div className="flex items-center justify-center gap-4">
         <span className="text-white text-sm font-semibold cursor-pointer">
