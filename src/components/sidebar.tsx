@@ -10,7 +10,7 @@ import { FaPenAlt } from "react-icons/fa";
 
 interface SidebarContentItem {
   title: string;
-  icon: string;
+  icon: React.JSX.Element;
   data: any;
 }
 interface ZenboxJwtPayload {

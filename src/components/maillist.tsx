@@ -8,6 +8,7 @@ import {
 import { IoIosArrowDropleft } from "react-icons/io";
 import { IoIosArrowDropright } from "react-icons/io";
 import axios from "axios";
+import NoMessagesFound from "./nomessagefound";
 
 interface MailData {
   sender: {
@@ -28,9 +29,14 @@ const MailChatBox = ({
   setActiveMail: (messageId: string, threadId: string) => void;
 }) => {
   const { alphabet, background } = getAlphabetAndBackground(data.sender.name);
+
+  console.log(data, "maildata");
+
   return (
     <div
-      className={`w-full h-16 flex items-center gap-2 p-2 border-t border-gray-400 cursor-pointer hover:bg-neutral-700 flex-shrink-0`}
+      className={`w-full h-16 flex items-center gap-2 p-2 border-t border-gray-400 cursor-pointer hover:bg-neutral-700 flex-shrink-0 ${
+        data.isRead ? "" : "bg-neutral-900"
+      }`}
       onClick={() => setActiveMail(data.messageId, data.threadId)}
     >
       <div
@@ -39,7 +45,7 @@ const MailChatBox = ({
       >
         <h3 className="font-bold text-2xl text-white">{alphabet}</h3>
       </div>
-      <div className="w-100 h-full flex flex-col justify-center gap-1">
+      <div className="w-300 h-full flex flex-col justify-center gap-1">
         <h2
           className={`text-md ${
             data.isRead ? "text-gray-500" : "text-white "
@@ -76,8 +82,16 @@ function MailList({
     if (mailList && mailList.messages && mailList.messages.length > 0) {
       setMailList(mailList);
       setCurrentArrayOfMessages(mailList.messages);
+    } else if (
+      mailList &&
+      mailList.messages &&
+      mailList.messages.length === 0
+    ) {
+      setCurrentArrayOfMessages([]);
     }
   }, [mailList]);
+
+  console.log(currentArrayOfMessages, "<-- currentArrayOfMessages");
 
   const navigateListPage = async (state: string) => {
     if (state === "next") {
@@ -187,24 +201,26 @@ function MailList({
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-black rounded-xl">
+    <div className="h-full w-full flex flex-col">
       {/* header */}
-      <div className="w-full h-14 flex items-center">
-        <h1 className="text-white text-xl font-bold px-2 uppercase cursor-pointer">
+      <div className="w-full h-24 flex items-center bg-neutral-950">
+        <h1 className="text-white text-xl font-bold px-4 uppercase cursor-pointer">
           {currentMailList?.title}
         </h1>
       </div>
       {/* mail list chat */}
       <div className="w-full h-full flex flex-col overflow-y-auto scrollbar-hide">
-        {currentArrayOfMessages.map((item: MailData, index: number) => {
-          return (
+        {currentArrayOfMessages.length > 0 ? (
+          currentArrayOfMessages.map((item: MailData, index: number) => (
             <MailChatBox
               data={item}
               key={index}
               setActiveMail={handleSetActiveMail}
             />
-          );
-        })}
+          ))
+        ) : (
+          <NoMessagesFound />
+        )}
       </div>
 
       {/* pagination */}

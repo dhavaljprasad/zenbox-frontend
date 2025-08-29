@@ -68,27 +68,12 @@ function MailPage() {
       setGlobalMailboxData(response.data);
       const updatedConfig = [...sideBarConfig];
 
-      // Update the contents of the 'Flow' section
-      updatedConfig[0].contents.forEach((item) => {
-        const mailboxType = item.title.toLowerCase();
-        if (mailboxData[mailboxType]) {
-          item.data = mailboxData[mailboxType];
-          if (item.data) {
-            (item.data as any).title = mailboxType;
-          }
-        }
-      });
-
-      // Update the contents of the 'Others' section
-      updatedConfig[1].contents.forEach((item) => {
-        const mailboxType = item.title.toLowerCase();
-        if (mailboxData[mailboxType]) {
-          item.data = mailboxData[mailboxType];
-          if (item.data) {
-            (item.data as any).title = mailboxType;
-          }
-        }
-      });
+      for (let i = 0; i < updatedConfig.length; i++) {
+        updatedConfig[i].data =
+          mailboxData[updatedConfig[i].title.toLowerCase()];
+        mailboxData[updatedConfig[i].title.toLowerCase()].title =
+          updatedConfig[i].title;
+      }
 
       setSideBarConfig(updatedConfig);
       setactiveMailListData(mailboxData.inbox);
@@ -137,7 +122,7 @@ function MailPage() {
           selectedTab={selectedTab}
           setSelectedTab={switchSideBarTab}
         />
-        <div className="h-screen w-full flex gap-2 p-2">
+        <div className="h-screen w-full flex">
           <MailList
             mailList={activeMailListData}
             setActiveMail={getActiveMailData}

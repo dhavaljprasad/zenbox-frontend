@@ -73,7 +73,7 @@ export const getAlphabetAndBackground = (data: string) => {
     },
     reddit: { letter: "R", color: "#FF4500" },
     threads: { letter: "T", color: "#000000" },
-    snapchat: { letter: "S", color: "#FFFC00" },
+    snapchat: { letter: "S", color: "#ddda00ff" },
   };
 
   if (!name || name.trim() === "") {
