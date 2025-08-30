@@ -221,6 +221,8 @@ function MailList({
     setActiveMailData(null);
   };
 
+  console.log(currentMailList, "current Mail List Data");
+
   return (
     <div className="h-full w-full flex flex-col">
       {/* header */}

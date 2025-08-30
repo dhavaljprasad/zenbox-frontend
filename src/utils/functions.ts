@@ -103,12 +103,48 @@ export const formatTimestamp = (ms: string) => {
     return "Invalid Date";
   }
 
+  const day = date.getDate();
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const month = monthNames[date.getMonth()];
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
-  const day = String(date.getDate()).padStart(2, "0");
 
-  const hours = String(date.getHours()).padStart(2, "0");
+  // 12-hour format
+  let hours = date.getHours();
   const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12 || 12; // convert 0 → 12, 13 → 1, etc.
 
-  return `${hours}:${minutes} on ${day}/${month}/${year}`;
+  return `${day} ${month} ${year} at ${hours}:${minutes}${ampm}`;
+};
+
+type Recipient = { name: string; email: string };
+
+export const formatRecipients = (
+  cc: Recipient[] = [],
+  bcc: Recipient[] = []
+) => {
+  let result = "To: Me";
+
+  if (cc.length > 0) {
+    result += `, ${cc[0].name}${cc.length > 1 ? ", ..." : ""} (CC)`;
+  }
+
+  if (bcc.length > 0) {
+    result += `, ${bcc[0].name}${bcc.length > 1 ? ", ..." : ""} (BCC)`;
+  }
+
+  return result;
 };

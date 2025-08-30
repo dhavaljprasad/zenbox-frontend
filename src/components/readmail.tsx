@@ -1,7 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { getAccessToken, getJWTToken } from "@/utils/functions";
+import {
+  formatRecipients,
+  formatTimestamp,
+  getAccessToken,
+  getJWTToken,
+} from "@/utils/functions";
 import { GetIframeHTML } from "@/utils/configs";
 import { AiOutlineCloseCircle } from "react-icons/ai";
 
@@ -12,6 +17,14 @@ interface MessageBody {
 interface ThreadMessage {
   subject: string;
   threads: {
+    cc: {
+      name: string;
+      email: string;
+    }[];
+    bcc: {
+      name: string;
+      email: string;
+    }[];
     id: string;
     senderName: string;
     senderEmail: string;
@@ -40,10 +53,12 @@ function ReadMail({
 }) {
   const [aiGeneratedSummary, setAIGeneratedSummary] = useState<SummaryState>({
     summary: "Generating summary of the thread",
-    color: "gray",
+    color: "#808080",
     state: "generating",
-    category: "Uncategorized",
+    category: "Generating",
   });
+
+  console.log(activeMail, "active Mail Data");
 
   const handleAttachmentClick = async (
     messageId: string,
@@ -150,6 +165,8 @@ function ReadMail({
     fetchSummary();
   }, [activeMail]);
 
+  console.log(aiGeneratedSummary, "aiGeneratedSummary");
+
   return (
     <div className="absolute h-full w-full-100 bg-black rounded-xl p-4 flex flex-col overflow-hidden">
       {/* Header */}
@@ -168,23 +185,24 @@ function ReadMail({
 
       {/* AI Generated Summary */}
       <div
-        className="w-full h-auto rounded-lg p-4 mb-4 flex flex-col gap-2 items-end"
-        style={{
-          borderColor: aiGeneratedSummary.color,
-          borderWidth: "1px",
-          borderStyle: "solid",
-          backgroundColor: `${aiGeneratedSummary.color}20`, // This won't work with Tailwind's color system
-        }}
+        style={{ borderColor: aiGeneratedSummary.color }}
+        className={`w-full max-h-96 rounded-lg p-4 mb-4 flex flex-col gap-2 border-2`}
       >
-        <p style={{ color: aiGeneratedSummary.color }}>
-          {aiGeneratedSummary.summary}
-        </p>
-        <span
-          className="text-xl font-semibold"
-          style={{ alignContent: "end", color: aiGeneratedSummary.color }}
-        >
-          {aiGeneratedSummary.category}
-        </span>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-white">
+            AI Generated Summary
+          </h1>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: aiGeneratedSummary.color }}
+            ></div>
+            <span className="text-base font-semibold text-white">
+              {aiGeneratedSummary.category}
+            </span>
+          </div>
+        </div>
+        <p className="text-white text-sm">{aiGeneratedSummary.summary}</p>
       </div>
 
       {/* The main component */}
@@ -196,23 +214,23 @@ function ReadMail({
           >
             {/* Message Header */}
             <div className="w-full h-auto flex items-center justify-between">
-              <div className="flex flex-col justify-center">
-                <span className="font-bold text-white">
-                  {message.senderName}
-                </span>
-                <span className="text-sm text-gray-400">
-                  ({message.senderEmail})
-                </span>
+              <div className="w-auth h-auto flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white">
+                    {message.senderName}
+                  </span>
+                  <span className="text-sm text-gray-400">
+                    {message.senderEmail}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-400">
+                    {formatRecipients(message.cc, message.bcc)}
+                  </span>
+                </div>
               </div>
               <span className="text-sm text-gray-500">
-                {new Date(Number(message.time)).toLocaleString("en-US", {
-                  month: "numeric",
-                  day: "numeric",
-                  year: "numeric",
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: true,
-                })}
+                {formatTimestamp(message.time)}
               </span>
             </div>
 
@@ -227,7 +245,7 @@ function ReadMail({
                           const doc =
                             el.contentDocument || el.contentWindow?.document;
                           if (doc) {
-                            el.style.height = "100%";
+                            el.style.height = doc.body.scrollHeight + "px";
                           }
                         } catch (e) {
                           console.warn("Iframe resize failed:", e);
