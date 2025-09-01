@@ -224,7 +224,7 @@ function MailList({
   console.log(currentMailList, "current Mail List Data");
 
   return (
-    <div className="h-full w-full flex flex-col">
+    <div className="h-full w-full flex flex-col relative">
       {/* header */}
       <div className="w-full h-20 flex items-center justify-between px-4 bg-neutral-950">
         <h1 className="text-white text-xl font-bold uppercase cursor-pointer">
@@ -253,7 +253,7 @@ function MailList({
       </div>
 
       {/* pagination */}
-      <div className="w-full h-20 flex items-center justify-between px-2">
+      <div className="w-full h-20 flex items-center justify-between px-2 relative">
         <span className="text-white text-base font-semibold">{`Estimated No. of Emails: ${currentMailList.resultSizeEstimate}+`}</span>
         <div className="flex items-center justify-center gap-2">
           <span className="text-white text-base font-semibold">{`Page No: ${currentMailList.pageNo}`}</span>
@@ -272,7 +272,11 @@ function MailList({
           </div>
         </div>
       </div>
-      {activeMail && <ReadMail activeMail={activeMail} closeMail={closeMail} />}
+      {activeMail && (
+        <div className="absolute inset-0 flex-col overflow-hidden z-10">
+          <ReadMail activeMail={activeMail} closeMail={closeMail} />
+        </div>
+      )}
     </div>
   );
 }

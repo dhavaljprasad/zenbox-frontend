@@ -168,7 +168,7 @@ function ReadMail({
   console.log(aiGeneratedSummary, "aiGeneratedSummary");
 
   return (
-    <div className="absolute h-full w-full-100 bg-black rounded-xl p-4 flex flex-col overflow-hidden">
+    <div className="w-full h-full bg-black p-4 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="max-w-full overflow-hidden flex-shrink-0 mb-4 flex items-center justify-between">
         <h1 className="text-white text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis uppercase">
@@ -206,11 +206,11 @@ function ReadMail({
       </div>
 
       {/* The main component */}
-      <div className="w-full h-full flex flex-col gap-4 scrollbar-hide overflow-y-auto">
+      <div className="w-full h-fit flex flex-col gap-4 scrollbar-hide overflow-y-auto">
         {activeMail?.threads?.map((message, index) => (
           <div
             key={message.id || index}
-            className="w-full h-[-webkit-fill-available] flex flex-col gap-4 bg-neutral-900 rounded-lg p-4 shadow-lg"
+            className="w-full h-auto flex flex-col gap-4 bg-neutral-900 rounded-lg p-4 shadow-lg"
           >
             {/* Message Header */}
             <div className="w-full h-auto flex items-center justify-between">
