@@ -1,6 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 
 // importing components
 import Sidebar from "@/components/sidebar";
@@ -8,7 +7,6 @@ import MailList from "@/components/maillist";
 
 // importing configs and utils
 import { SideBarConfig } from "@/utils/configs";
-import { getAccessToken, getJWTToken } from "@/utils/functions";
 
 function MailPage() {
   const [selectedTab, setSelectedTab] = useState<string>(

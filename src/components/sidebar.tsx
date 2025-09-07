@@ -7,6 +7,8 @@ import AppIcon from "../app/icon.svg";
 import Image from "next/image";
 import { CgCompress } from "react-icons/cg";
 import { FaPenAlt } from "react-icons/fa";
+import { GiArtificialHive } from "react-icons/gi";
+import { useRouter } from "next/navigation";
 
 interface SidebarContentItem {
   title: string;
@@ -33,6 +35,7 @@ function Sidebar({
   setSelectedTab: (tab: string) => void;
 }) {
   const [userData, setUserData] = useState<ZenboxJwtPayload | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const jwtToken = getJWTToken();
@@ -78,6 +81,12 @@ function Sidebar({
             Icon={<FaPenAlt size={20} color="white" />}
             title={"Compose"}
             onClick={() => {}}
+            selected={false}
+          />
+          <SidebarButton
+            Icon={<GiArtificialHive size={20} color="white" />}
+            title={"Chat with AI"}
+            onClick={() => router.push("/chat")}
             selected={false}
           />
         </div>

@@ -180,7 +180,6 @@ function MailList({ activeTab }: { activeTab: string }) {
           },
         }
       );
-      console.log("Active mail data:", response.data);
       setActiveMail(response.data);
     } catch (error) {
       console.error("Error fetching active mail:", error);

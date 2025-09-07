@@ -3,7 +3,7 @@ import { BsFillSendFill } from "react-icons/bs";
 import { MdDrafts } from "react-icons/md";
 import { BiStar } from "react-icons/bi";
 
-export let SideBarConfig = [
+export const SideBarConfig = [
   {
     title: "Inbox",
     icon: <FiInbox size={24} color="white" />,
