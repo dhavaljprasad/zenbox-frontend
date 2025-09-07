@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import {
   formatTimestamp,
   getAccessToken,
@@ -12,14 +12,15 @@ import { LuRefreshCw } from "react-icons/lu";
 import axios from "axios";
 import NoMessagesFound from "./nomessagefound";
 import ReadMail from "./readmail";
+import LoadingComponent from "./loading";
+import { access } from "fs";
+
 interface MailData {
-  sender: {
-    name: string;
-    email: string;
-  };
-  subject: string;
   isRead: boolean;
+  labelIds: string[];
   messageId: string;
+  sender: { name: string; email: string };
+  subject: string;
   threadId: string;
   time: string;
 }
@@ -66,185 +67,155 @@ const MailChatBox = ({
     </div>
   );
 };
-interface MailListData {
-  title?: string;
-  messages: MailData[];
-  nextPageToken: string;
-  pageNo: number;
-  resultSizeEstimate: number;
-}
 
-function MailList({
-  mailList,
-  refreshEmails,
-}: {
-  mailList: MailListData;
-  refreshEmails: () => void;
-}) {
-  const [currentMailList, setMailList] = useState(mailList);
-  const [currentArrayOfMessages, setCurrentArrayOfMessages] = useState(
-    mailList?.messages || []
-  );
-  const [activeMail, setActiveMailData] = useState(null);
+function MailList({ activeTab }: { activeTab: string }) {
+  const [superMailList, setSuperMailList] = useState([] as MailData[]);
+  const [activeMailList, setActiveMailList] = useState([] as MailData[]);
+  const [resultSizeEstimate, setResultSizeEstimate] = useState(0);
+  const [nextPageId, setNextPageId] = useState<string>("");
+  const [pageNo, setPageNo] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (mailList && mailList.messages && mailList.messages.length > 0) {
-      setMailList(mailList);
-      setCurrentArrayOfMessages(mailList.messages);
-    } else if (
-      mailList &&
-      mailList.messages &&
-      mailList.messages.length === 0
-    ) {
-      setCurrentArrayOfMessages([]);
-    }
-  }, [mailList]);
+  const [activeMail, setActiveMail] = useState(null);
 
-  const navigateListPage = async (state: string) => {
-    if (state === "next") {
-      const currentStartIndex = currentMailList.messages.findIndex(
-        (message) => message.messageId === currentArrayOfMessages[0]?.messageId
+  const getSuperMailList = async () => {
+    try {
+      setLoading(true);
+      const accessToken = await getAccessToken();
+      const jwtToken = getJWTToken();
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/allmail`,
+        {
+          accessToken: accessToken,
+          selectedTab: activeTab.toLowerCase(),
+          selectedPageId: "",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
       );
+      setSuperMailList(response.data.data.messages);
+      setNextPageId(response.data.data.nextPageToken);
+      setActiveMailList(response.data.data.messages);
+      setResultSizeEstimate(response.data.data.resultSizeEstimate);
+      setPageNo(1);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching mail list:", error);
+    }
+  };
 
-      const nextStartIndex = currentStartIndex + currentArrayOfMessages.length;
+  const navigateMailList = async (navigateTo: "next" | "prev") => {
+    const currentStartIndex = superMailList.findIndex(
+      (mail) => mail.messageId === activeMailList[0]?.messageId
+    );
 
-      if (currentMailList.messages[nextStartIndex]) {
-        const nextMessages = currentMailList.messages.slice(
-          nextStartIndex,
-          nextStartIndex + 20
-        );
-        setCurrentArrayOfMessages(nextMessages);
-        setMailList((prevMailList) => ({
-          ...prevMailList,
-          pageNo: prevMailList.pageNo + 1,
-        }));
-      } else {
+    if (navigateTo === "prev") {
+      // If already have prev 20 in superMailList
+      if (currentStartIndex >= 20) {
+        const newStart = currentStartIndex - 20;
+        const newEnd = currentStartIndex;
+        setActiveMailList(superMailList.slice(newStart, newEnd));
+        setPageNo((prev) => (prev > 1 ? prev - 1 : 1));
+      }
+    } else if (navigateTo === "next") {
+      const nextStart = currentStartIndex + 20;
+      const nextEnd = nextStart + 20;
+
+      // If already have next 20 in superMailList
+      if (superMailList.length >= nextEnd) {
+        setActiveMailList(superMailList.slice(nextStart, nextEnd));
+        setPageNo((prev) => prev + 1);
+      }
+
+      //  Else fetch new from API
+      else if (nextPageId) {
         try {
-          const jwtToken = getJWTToken();
+          setLoading(true);
           const accessToken = await getAccessToken();
+          const jwtToken = getJWTToken();
           const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/nextMailSet`,
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/allmail`,
             {
               accessToken: accessToken,
-              nextPageToken: currentMailList.nextPageToken,
-              type: mailList.title,
+              selectedTab: activeTab.toLowerCase(),
+              selectedPageId: nextPageId,
             },
             {
-              headers: {
-                Authorization: `Bearer ${jwtToken}`,
-              },
+              headers: { Authorization: `Bearer ${jwtToken}` },
             }
           );
 
-          const newMailData = response.data;
+          const newMessages = response.data.data.messages || [];
+          const nextToken = response.data.data.nextPageToken || "";
 
-          // Update the full mail list state with the new messages
-          setMailList((prevMailList) => ({
-            ...prevMailList,
-            messages: [...prevMailList.messages, ...newMailData.messages],
-            nextPageToken: newMailData.nextPageToken,
-            resultSizeEstimate: newMailData.resultSizeEstimate,
-            pageNo: prevMailList.pageNo + 1,
-          }));
-
-          // Use the newly fetched messages to update the displayed list
-          setCurrentArrayOfMessages(newMailData.messages);
+          setSuperMailList((prev) => [...prev, ...newMessages]);
+          setActiveMailList(newMessages);
+          setNextPageId(nextToken);
+          setPageNo((prev) => prev + 1);
         } catch (error) {
-          console.warn(`API Error failed: ${error}`);
+          console.error("Error navigating next:", error);
+        } finally {
+          setLoading(false);
         }
       }
-    } else {
-      if (currentMailList.pageNo <= 1) {
-        return;
-      }
-
-      const currentStartIndex = currentMailList.messages.findIndex(
-        (message) => message.messageId === currentArrayOfMessages[0]?.messageId
-      );
-
-      const previousStartIndex = currentStartIndex - 20;
-
-      const previousMessages = currentMailList.messages.slice(
-        Math.max(0, previousStartIndex),
-        currentStartIndex
-      );
-
-      setCurrentArrayOfMessages(previousMessages);
-      setMailList((prevMailList) => ({
-        ...prevMailList,
-        pageNo: prevMailList.pageNo - 1,
-      }));
     }
   };
 
-  const getActiveMailData = async (messageId: string, threadId: string) => {
+  const getActiveMail = async (messageId: string, threadId: string) => {
     try {
-      // ✅ 1. Immediately update local + global state to mark as read
-      const updatedCurrentMessages = currentArrayOfMessages.map((message) =>
-        message.messageId === messageId ? { ...message, isRead: true } : message
-      );
-      setCurrentArrayOfMessages(updatedCurrentMessages);
-
-      setMailList((prevMailList) => {
-        const fullUpdatedMessages = prevMailList.messages.map((message) =>
-          message.messageId === messageId
-            ? { ...message, isRead: true }
-            : message
-        );
-        return { ...prevMailList, messages: fullUpdatedMessages };
-      });
-
-      // ✅ 2. Call backend to fetch full mail data
-      const jwtToken = getJWTToken();
       const accessToken = await getAccessToken();
-
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getMailData`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/mail/getmaildata`,
         {
-          accessToken: accessToken,
-          threadId: threadId,
           messageId: messageId,
+          threadId: threadId,
+          accessToken: accessToken,
         },
         {
-          headers: { Authorization: `Bearer ${jwtToken}` },
+          headers: {
+            Authorization: `Bearer ${getJWTToken()}`,
+          },
         }
       );
-
-      // ✅ 3. Set the fetched mail as active
-      setActiveMailData(response.data);
+      console.log("Active mail data:", response.data);
+      setActiveMail(response.data);
     } catch (error) {
-      console.warn(`Following Error Occurred: ${error}`);
+      console.error("Error fetching active mail:", error);
     }
   };
 
-  const closeMail = () => {
-    setActiveMailData(null);
-  };
-
-  console.log(currentMailList, "current Mail List Data");
+  useEffect(() => {
+    getSuperMailList();
+  }, [activeTab]);
 
   return (
     <div className="h-full w-full flex flex-col relative">
       {/* header */}
       <div className="w-full h-20 flex items-center justify-between px-4 bg-neutral-950">
         <h1 className="text-white text-xl font-bold uppercase cursor-pointer">
-          {currentMailList?.title}
+          {activeTab}
         </h1>
         <div
           className="cursor-pointer hover:bg-neutral-700 p-2 rounded"
-          onClick={() => refreshEmails()}
+          onClick={() => {}}
         >
           <LuRefreshCw color="#fff" size={20} strokeWidth={2} />
         </div>
       </div>
+
       {/* mail list chat */}
       <div className="w-full h-full flex flex-col overflow-y-auto scrollbar-hide">
-        {currentArrayOfMessages.length > 0 ? (
-          currentArrayOfMessages.map((item: MailData, index: number) => (
+        {loading ? (
+          <LoadingComponent />
+        ) : activeMailList?.length > 0 ? (
+          activeMailList.map((item: MailData, index: number) => (
             <MailChatBox
               data={item}
               key={index}
-              setActiveMail={getActiveMailData}
+              setActiveMail={getActiveMail}
             />
           ))
         ) : (
@@ -254,27 +225,31 @@ function MailList({
 
       {/* pagination */}
       <div className="w-full h-20 flex items-center justify-between px-2 relative">
-        <span className="text-white text-base font-semibold">{`Estimated No. of Emails: ${currentMailList.resultSizeEstimate}+`}</span>
+        <span className="text-white text-base font-semibold">{`Estimated No. of Emails: ${resultSizeEstimate}+`}</span>
         <div className="flex items-center justify-center gap-2">
-          <span className="text-white text-base font-semibold">{`Page No: ${currentMailList.pageNo}`}</span>
+          <span className="text-white text-base font-semibold">{`Page No: ${pageNo}`}</span>
           <div
             className="cursor-pointer"
-            onClick={() => navigateListPage("prev")}
-            aria-disabled={currentMailList.pageNo <= 1}
+            onClick={() => navigateMailList("prev")}
           >
             <IoIosArrowDropleft color="#fff" size={30} />
           </div>
           <div
             className="cursor-pointer"
-            onClick={() => navigateListPage("next")}
+            onClick={() => navigateMailList("next")}
           >
             <IoIosArrowDropright color="#fff" size={30} />
           </div>
         </div>
       </div>
+
+      {/* active mail view */}
       {activeMail && (
         <div className="absolute inset-0 flex-col overflow-hidden z-10">
-          <ReadMail activeMail={activeMail} closeMail={closeMail} />
+          <ReadMail
+            activeMail={activeMail}
+            closeMail={() => setActiveMail(null)}
+          />
         </div>
       )}
     </div>

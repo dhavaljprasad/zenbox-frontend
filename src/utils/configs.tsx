@@ -7,22 +7,18 @@ export let SideBarConfig = [
   {
     title: "Inbox",
     icon: <FiInbox size={24} color="white" />,
-    data: null,
   },
   {
     title: "Sent",
     icon: <BsFillSendFill size={24} color="white" />,
-    data: null,
   },
   {
     title: "Drafts",
     icon: <MdDrafts size={24} color="white" />,
-    data: null,
   },
   {
     title: "Starred",
     icon: <BiStar size={24} color="white" />,
-    data: null,
   },
 ];
 
